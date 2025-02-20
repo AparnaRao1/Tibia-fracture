@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ball Image Display</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Optional: For ease of use -->
+</head>
+<body>
+    <h1>Ball Image</h1>
+    <div id="results"></div>
+
+    <script>
+        async function fetchBallImage() {
+            try {
+                // Fetch the cropped image from the backend
+                const response = await fetch('http://127.0.0.1:5001/ball_image', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const imageUrl = data.ball_image;  // Get the base64 image data
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <p>Here is your Ball image:</p>
+                        <img src="${imageUrl}" alt="Cropped Image">
+                    `;
+                } else {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `<p>Error: ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching the cropped image:', error);
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `<p>An error occurred. Please try again.</p>`;
+            }
+        }
+
+        // Call the function to fetch the cropped image when the page loads
+        window.onload = fetchBallImage;
+    </script>
+</body>
+</html>

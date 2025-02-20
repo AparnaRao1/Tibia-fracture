@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cropped Image Display</title>
+</head>
+<body>
+    <h1>Cropped Image</h1>
+    <div id="results"></div>
+
+    <script>
+        async function fetchCroppedImage() {
+            try {
+                // Fetch the cropped image from the backend
+                const response = await fetch('http://127.0.0.1:5001/crop_image', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const imageUrl = data.cropped_image;  // Get the base64 image data
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <p>Here is your cropped image:</p>
+                        <img src="${imageUrl}" alt="Cropped Image" style="max-width: 100%; height: auto;">
+                        <p>Direct URL to the cropped image: <a href="${data.cropped_image_url}" target="_blank">${data.cropped_image_url}</a></p>
+                    `;
+                } else {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `<p>Error: ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching the cropped image:', error);
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `<p>An error occurred. Please try again.</p>`;
+            }
+        }
+
+        // Call the function to fetch the cropped image when the page loads
+        window.onload = fetchCroppedImage;
+    </script>
+</body>
+</html>

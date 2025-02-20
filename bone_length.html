@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cropped Image Display and Bone Length Calculation</title>
+</head>
+<body>
+    <h1>Bone Length Calculation</h1>
+    <input type="file" id="image-upload" accept="image/*">
+    <input type="number" id="pixel-diameter" placeholder="Enter ball diameter in pixels">
+    <button id="upload-button">Calculate Bone Length</button>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('upload-button').onclick = async function() {
+            const fileInput = document.getElementById('image-upload');
+            const pixelDiameter = document.getElementById('pixel-diameter').value;
+
+            if (fileInput.files.length === 0) {
+                alert('Please upload an image file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const cropResponse = await fetch('http://127.0.0.1:5001/crop_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!cropResponse.ok) {
+                    const errorData = await cropResponse.json();
+                    console.error("Error cropping image:", errorData.error);
+                    return;
+                }
+
+                const cropData = await cropResponse.json();
+
+                // Check if cropped image is valid
+                if (!cropData.cropped_image) {
+                    console.error("Cropped image data is invalid:", cropData);
+                    return;
+                }
+
+                const lengthResponse = await fetch('http://127.0.0.1:5001/bone_length', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cropped_image: cropData.cropped_image,
+                        pixel_diameter_ball: pixelDiameter
+                    })
+                });
+
+                if (lengthResponse.ok) {
+                    const lengthData = await lengthResponse.json();
+                    document.getElementById('results').innerHTML = `
+                        <p>Bone Length: ${lengthData.length_in_cm.toFixed(2)} cm</p>
+                        <img src="${lengthData.bone_image}" alt="Bone Length Image" style="max-width: 100%; height: auto;">
+                    `;
+                } else {
+                    const errorData = await lengthResponse.json();
+                    console.error("Error calculating length:", errorData.error);
+                }
+            } catch (error) {
+                console.error('Error during processing:', error);
+            }
+        };
+    </script>
+</body>
+</html>

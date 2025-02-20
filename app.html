@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Processing</title>
+</head>
+<body>
+    <h1>Upload an Image for Processing</h1>
+    <form id="uploadForm">
+        <input type="file" name="image" id="image" accept="image/*">
+        <button type="submit">Upload and Process</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('image');
+
+            if (fileInput.files.length === 0) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/process_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                if (response.ok) {
+                    const result = await response.json();
+                    resultsDiv.innerHTML = `
+                        <h3>Processed Images</h3>
+                        <p>Isolated Image:</p>
+                        <img src="${result.isolated}" alt="Isolated Image">
+                        <p>Corrected Image:</p>
+                        <img src="${result.corrected}" alt="Corrected Image">
+                        <p>Equalized Image:</p>
+                        <img src="${result.equalized}" alt="Equalized Image">
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p>Error: ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
